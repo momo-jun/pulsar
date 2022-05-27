@@ -84,8 +84,7 @@ void export_enums() {
         .value("TransactionConflict", ResultTransactionConflict)
         .value("TransactionNotFound", ResultTransactionNotFound)
         .value("ProducerFenced", ResultProducerFenced)
-        .value("MemoryBufferIsFull", ResultMemoryBufferIsFull)
-        .value("Interrupted", pulsar::ResultInterrupted);
+        .value("MemoryBufferIsFull", ResultMemoryBufferIsFull);
 
     enum_<SchemaType>("SchemaType", "Supported schema types")
         .value("NONE", pulsar::NONE)

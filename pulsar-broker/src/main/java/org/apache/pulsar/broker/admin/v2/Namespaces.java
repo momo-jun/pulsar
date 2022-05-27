@@ -473,8 +473,7 @@ public class Namespaces extends NamespacesBase {
         validateNamespaceName(tenant, namespace);
         internalModifyDeduplicationAsync(null)
                 .thenAccept(__ -> asyncResponse.resume(Response.noContent().build()))
-                .exceptionally(e -> {
-                    Throwable ex = FutureUtil.unwrapCompletionException(e);
+                .exceptionally(ex -> {
                     log.error("Failed to remove broker deduplication config for namespace {}", namespaceName, ex);
                     resumeAsyncResponseExceptionally(asyncResponse, ex);
                     return null;
@@ -486,17 +485,10 @@ public class Namespaces extends NamespacesBase {
     @ApiOperation(value = "Get autoTopicCreation info in a namespace")
     @ApiResponses(value = {@ApiResponse(code = 403, message = "Don't have admin permission"),
             @ApiResponse(code = 404, message = "Tenant or namespace doesn't exist")})
-    public void getAutoTopicCreation(@Suspended AsyncResponse asyncResponse,
-                                                          @PathParam("tenant") String tenant,
+    public AutoTopicCreationOverride getAutoTopicCreation(@PathParam("tenant") String tenant,
                                                           @PathParam("namespace") String namespace) {
         validateNamespaceName(tenant, namespace);
-        internalGetAutoTopicCreationAsync()
-                .thenAccept(asyncResponse::resume)
-                .exceptionally(ex -> {
-                    log.error("Failed to get autoTopicCreation info for namespace {}", namespaceName, ex);
-                    resumeAsyncResponseExceptionally(asyncResponse, ex);
-                    return null;
-                });
+        return internalGetAutoTopicCreation();
     }
 
     @POST
@@ -512,27 +504,14 @@ public class Namespaces extends NamespacesBase {
             @PathParam("tenant") String tenant, @PathParam("namespace") String namespace,
             @ApiParam(value = "Settings for automatic topic creation", required = true)
                     AutoTopicCreationOverride autoTopicCreationOverride) {
-        validateNamespaceName(tenant, namespace);
-        internalSetAutoTopicCreationAsync(autoTopicCreationOverride)
-                .thenAccept(__ -> {
-                    String autoOverride = (autoTopicCreationOverride != null
-                            && autoTopicCreationOverride.isAllowAutoTopicCreation()) ? "enabled" : "disabled";
-                    log.info("[{}] Successfully {} autoTopicCreation on namespace {}", clientAppId(),
-                            autoOverride, namespaceName);
-                    asyncResponse.resume(Response.noContent().build());
-                })
-                .exceptionally(e -> {
-                    Throwable ex = FutureUtil.unwrapCompletionException(e);
-                    log.error("[{}] Failed to set autoTopicCreation status on namespace {}", clientAppId(),
-                            namespaceName,
-                            ex);
-                    if (ex instanceof MetadataStoreException.NotFoundException) {
-                        asyncResponse.resume(new RestException(Response.Status.NOT_FOUND, "Namespace does not exist"));
-                    } else {
-                        resumeAsyncResponseExceptionally(asyncResponse, ex);
-                    }
-                    return null;
-                });
+        try {
+            validateNamespaceName(tenant, namespace);
+            internalSetAutoTopicCreation(asyncResponse, autoTopicCreationOverride);
+        } catch (RestException e) {
+            asyncResponse.resume(e);
+        } catch (Exception e) {
+            asyncResponse.resume(new RestException(e));
+        }
     }
 
     @DELETE
@@ -542,25 +521,14 @@ public class Namespaces extends NamespacesBase {
             @ApiResponse(code = 404, message = "Tenant or cluster or namespace doesn't exist") })
     public void removeAutoTopicCreation(@Suspended final AsyncResponse asyncResponse,
                                         @PathParam("tenant") String tenant, @PathParam("namespace") String namespace) {
-        validateNamespaceName(tenant, namespace);
-        internalSetAutoTopicCreationAsync(null)
-                .thenAccept(__ -> {
-                    log.info("[{}] Successfully remove autoTopicCreation on namespace {}",
-                            clientAppId(), namespaceName);
-                    asyncResponse.resume(Response.noContent().build());
-                })
-                .exceptionally(e -> {
-                    Throwable ex = FutureUtil.unwrapCompletionException(e);
-                    log.error("[{}] Failed to remove autoTopicCreation status on namespace {}", clientAppId(),
-                            namespaceName,
-                            ex);
-                    if (ex instanceof MetadataStoreException.NotFoundException) {
-                        asyncResponse.resume(new RestException(Response.Status.NOT_FOUND, "Namespace does not exist"));
-                    } else {
-                        resumeAsyncResponseExceptionally(asyncResponse, ex);
-                    }
-                    return null;
-                });
+        try {
+            validateNamespaceName(tenant, namespace);
+            internalRemoveAutoTopicCreation(asyncResponse);
+        } catch (RestException e) {
+            asyncResponse.resume(e);
+        } catch (Exception e) {
+            asyncResponse.resume(new RestException(e));
+        }
     }
 
     @POST
@@ -1854,7 +1822,7 @@ public class Namespaces extends NamespacesBase {
     @ApiResponses(value = {@ApiResponse(code = 403, message = "Don't have admin permission"),
             @ApiResponse(code = 404, message = "Tenant or Namespace doesn't exist"),
             @ApiResponse(code = 412, message = "schemaValidationEnforced value is not valid")})
-    public void setSchemaValidationEnforced(@PathParam("tenant") String tenant,
+    public void setSchemaValidtionEnforced(@PathParam("tenant") String tenant,
                                            @PathParam("namespace") String namespace,
                                            @ApiParam(value =
                                                    "Flag of whether validation is enforced on the specified namespace",

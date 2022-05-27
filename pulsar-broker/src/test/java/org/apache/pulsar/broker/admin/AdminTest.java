@@ -264,7 +264,7 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
             assertEquals(e.getResponse().getStatus(), 412);
         }
 
-        asyncRequests(ctx -> clusters.deleteNamespaceIsolationPolicy(ctx, "use", "policy1"));
+        clusters.deleteNamespaceIsolationPolicy("use", "policy1");
         assertTrue(((Map<String, NamespaceIsolationDataImpl>) asyncRequests(ctx ->
                 clusters.getNamespaceIsolationPolicies(ctx, "use"))).isEmpty());
 
@@ -403,7 +403,8 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
         } catch (RestException e) {
             assertEquals(e.getResponse().getStatus(), Status.PRECONDITION_FAILED.getStatusCode());
         }
-        verify(clusters, times(24)).validateSuperUserAccessAsync();
+        verify(clusters, times(23)).validateSuperUserAccessAsync();
+        verify(clusters, times(1)).validateSuperUserAccess();
     }
 
     @Test

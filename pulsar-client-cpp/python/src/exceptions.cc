@@ -108,5 +108,4 @@ void export_exceptions() {
     exceptions[ResultTransactionNotFound] = createExceptionClass("TransactionNotFound", basePulsarException);
     exceptions[ResultProducerFenced] = createExceptionClass("ProducerFenced", basePulsarException);
     exceptions[ResultMemoryBufferIsFull] = createExceptionClass("MemoryBufferIsFull", basePulsarException);
-    exceptions[ResultInterrupted] = createExceptionClass("Interrupted", basePulsarException);
 }

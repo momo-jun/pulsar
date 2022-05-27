@@ -36,8 +36,6 @@ import org.testng.annotations.Test;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mockStatic;
@@ -81,7 +79,7 @@ public class ThreadRuntimeFactoryTest {
 
         ClientBuilder clientBuilder = testMemoryLimit(null, null);
 
-        Mockito.verify(clientBuilder, Mockito.times(1)).memoryLimit(Mockito.eq(0L), Mockito.eq(SizeUnit.BYTES));
+        Mockito.verify(clientBuilder, Mockito.times(0)).memoryLimit(Mockito.anyLong(), Mockito.any());
     }
 
     @Test
@@ -112,7 +110,6 @@ public class ThreadRuntimeFactoryTest {
             ClientBuilder clientBuilder = Mockito.mock(ClientBuilder.class);
             mockedPulsarClient.when(() -> PulsarClient.builder()).thenAnswer(i -> clientBuilder);
             doReturn(clientBuilder).when(clientBuilder).serviceUrl(anyString());
-            doReturn(clientBuilder).when(clientBuilder).memoryLimit(anyLong(), any());
 
             ThreadRuntimeFactoryConfig threadRuntimeFactoryConfig = new ThreadRuntimeFactoryConfig();
             threadRuntimeFactoryConfig.setThreadGroupName("foo");

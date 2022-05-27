@@ -56,10 +56,7 @@ public class EmbeddedPulsarCluster implements AutoCloseable {
         this.numBrokers = numBrokers;
         this.numBookies = numBookies;
         this.metadataStoreUrl = metadataStoreUrl;
-        this.bkCluster = BKCluster.builder()
-                .metadataServiceUri(metadataStoreUrl)
-                .numBookies(numBookies)
-                .build();
+        this.bkCluster = new BKCluster(metadataStoreUrl, numBookies);
 
         for (int i = 0; i < numBrokers; i++) {
             PulsarService s = new PulsarService(getConf());

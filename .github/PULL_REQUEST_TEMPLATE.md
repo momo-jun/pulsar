@@ -73,11 +73,11 @@ Need to update docs?
 - [ ] `doc-required` 
 (Your PR needs to update docs and you will update later)
   
-- [ ] `doc-not-needed` 
+- [ ] `no-need-doc` 
 (Please explain why)
   
 - [ ] `doc` 
 (Your PR contains doc changes)
 
-- [ ] `doc-complete`
+- [ ] `doc-added`
 (Docs have been already added)

@@ -19,10 +19,8 @@
 package org.apache.pulsar.client.impl.schema.generic;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -36,13 +34,16 @@ import org.slf4j.LoggerFactory;
 
 public class GenericJsonReader implements SchemaReader<GenericRecord> {
 
-    private final ObjectReader objectReader;
+    private final ObjectMapper objectMapper;
     private final byte[] schemaVersion;
     private final List<Field> fields;
     private SchemaInfo schemaInfo;
 
     public GenericJsonReader(List<Field> fields, SchemaInfo schemaInfo){
-        this(null, fields, schemaInfo);
+        this.fields = fields;
+        this.schemaVersion = null;
+        this.objectMapper = new ObjectMapper();
+        this.schemaInfo = schemaInfo;
     }
 
     public GenericJsonReader(List<Field> fields){
@@ -54,17 +55,16 @@ public class GenericJsonReader implements SchemaReader<GenericRecord> {
     }
 
     public GenericJsonReader(byte[] schemaVersion, List<Field> fields, SchemaInfo schemaInfo){
+        this.objectMapper = new ObjectMapper();
         this.fields = fields;
         this.schemaVersion = schemaVersion;
         this.schemaInfo = schemaInfo;
-        ObjectMapper objectMapper = new ObjectMapper();
-        this.objectReader = objectMapper.reader().with(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
     }
 
     @Override
     public GenericJsonRecord read(byte[] bytes, int offset, int length) {
         try {
-            JsonNode jn = objectReader.readTree(new String(bytes, offset, length, UTF_8));
+            JsonNode jn = objectMapper.readTree(new String(bytes, offset, length, UTF_8));
             return new GenericJsonRecord(schemaVersion, fields, jn, schemaInfo);
         } catch (IOException ioe) {
             throw new SchemaSerializationException(ioe);
@@ -74,7 +74,7 @@ public class GenericJsonReader implements SchemaReader<GenericRecord> {
     @Override
     public GenericRecord read(InputStream inputStream) {
         try {
-            JsonNode jn = objectReader.readTree(inputStream);
+            JsonNode jn = objectMapper.readTree(inputStream);
             return new GenericJsonRecord(schemaVersion, fields, jn, schemaInfo);
         } catch (IOException ioe) {
             throw new SchemaSerializationException(ioe);

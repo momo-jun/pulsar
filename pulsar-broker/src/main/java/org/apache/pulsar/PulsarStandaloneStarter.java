@@ -23,17 +23,20 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import java.io.FileInputStream;
 import java.util.Arrays;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.pulsar.broker.ServiceConfiguration;
 import org.apache.pulsar.common.configuration.PulsarConfigurationLoader;
 import org.apache.pulsar.common.util.CmdGenerateDocs;
+import org.apache.pulsar.metadata.impl.ZKMetadataStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 public class PulsarStandaloneStarter extends PulsarStandalone {
     @Parameter(names = {"-g", "--generate-docs"}, description = "Generate docs")
     private boolean generateDocs = false;
+
+    private static final Logger log = LoggerFactory.getLogger(PulsarStandaloneStarter.class);
 
     public PulsarStandaloneStarter(String[] args) throws Exception {
 
@@ -68,9 +71,12 @@ public class PulsarStandaloneStarter extends PulsarStandalone {
                     inputStream, ServiceConfiguration.class);
         }
 
+        String zkServers = "127.0.0.1";
+
         if (this.getAdvertisedAddress() != null) {
             // Use advertised address from command line
             config.setAdvertisedAddress(this.getAdvertisedAddress());
+            zkServers = this.getAdvertisedAddress();
         } else if (isBlank(config.getAdvertisedAddress()) && isBlank(config.getAdvertisedListeners())) {
             // Use advertised address as local hostname
             config.setAdvertisedAddress("localhost");
@@ -95,6 +101,14 @@ public class PulsarStandaloneStarter extends PulsarStandalone {
                 }
             }
         }
+        final String metadataStoreUrl =
+                ZKMetadataStore.ZK_SCHEME_IDENTIFIER + zkServers + ":" + this.getZkPort();
+        config.setMetadataStoreUrl(metadataStoreUrl);
+        config.setConfigurationMetadataStoreUrl(metadataStoreUrl);
+
+        config.setRunningStandalone(true);
+        config.getProperties().setProperty("metadataStoreUrl", metadataStoreUrl);
+        config.getProperties().setProperty("configurationMetadataStoreUrl", metadataStoreUrl);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {

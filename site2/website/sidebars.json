@@ -145,7 +145,6 @@
         "security-athenz",
         "security-kerberos",
         "security-oauth2",
-        "security-basic-auth",
         "security-authorization",
         "security-encryption",
         "security-extending",

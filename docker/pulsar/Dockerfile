@@ -33,14 +33,10 @@ COPY scripts/pulsar-zookeeper-ruok.sh /pulsar/bin
 COPY scripts/watch-znode.py /pulsar/bin
 COPY scripts/install-pulsar-client.sh /pulsar/bin
 
-# The final image needs to give the root group sufficient permission for Pulsar components
-# to write to specific directories within /pulsar
+# In order to support running this docker image as a container on OpenShift
+# the final image needs to give the root group sufficient permission.
 # The file permissions are preserved when copying files from this builder image to the target image.
-RUN for SUBDIRECTORY in conf data download logs; do \
-     [ -d /pulsar/$SUBDIRECTORY ] || mkdir /pulsar/$SUBDIRECTORY; \
-     chmod -R g+w /pulsar/$SUBDIRECTORY; \
-     done
-
+RUN chmod -R g+w /pulsar/conf
 # Presto writes logs to this directory (at least during tests), so we need to give the process permission
 # to create those log directories. This should be removed when presto is removed.
 RUN chmod g+w /pulsar/lib/presto

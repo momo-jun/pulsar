@@ -384,10 +384,6 @@
         },
         {
           "type": "doc",
-          "id": "version-2.9.1/security-basic-auth"
-        },
-        {
-          "type": "doc",
           "id": "version-2.9.1/security-authorization"
         },
         {

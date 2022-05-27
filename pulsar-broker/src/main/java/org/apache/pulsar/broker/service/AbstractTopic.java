@@ -108,6 +108,8 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener<TopicP
     protected volatile boolean isEncryptionRequired = false;
 
     protected volatile Boolean isAllowAutoUpdateSchema;
+    // schema validation enforced flag
+    protected volatile boolean schemaValidationEnforced = false;
 
     protected volatile PublishRateLimiter topicPublishRateLimiter;
 
@@ -219,7 +221,7 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener<TopicP
             DispatchRateImpl.normalize(data.getSubscriptionDispatchRate()));
         topicPolicies.getCompactionThreshold().updateTopicValue(data.getCompactionThreshold());
         topicPolicies.getDispatchRate().updateTopicValue(DispatchRateImpl.normalize(data.getDispatchRate()));
-        topicPolicies.getSchemaValidationEnforced().updateTopicValue(data.getSchemaValidationEnforced());
+
         this.subscriptionPolicies = data.getSubscriptionPolicies();
     }
 
@@ -267,7 +269,6 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener<TopicP
             brokerService.getPulsar().getConfig().getClusterName());
         updateSchemaCompatibilityStrategyNamespaceValue(namespacePolicies);
         updateNamespaceDispatchRate(namespacePolicies, brokerService.getPulsar().getConfig().getClusterName());
-        topicPolicies.getSchemaValidationEnforced().updateNamespaceValue(namespacePolicies.schema_validation_enforced);
     }
 
     private void updateNamespaceDispatchRate(Policies namespacePolicies, String cluster) {
@@ -361,7 +362,6 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener<TopicP
         topicPolicies.getSchemaCompatibilityStrategy()
                 .updateBrokerValue(formatSchemaCompatibilityStrategy(schemaCompatibilityStrategy));
         topicPolicies.getDispatchRate().updateBrokerValue(dispatchRateInBroker(config));
-        topicPolicies.getSchemaValidationEnforced().updateBrokerValue(config.isSchemaValidationEnforced());
     }
 
     private DispatchRateImpl dispatchRateInBroker(ServiceConfiguration config) {
@@ -570,7 +570,7 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener<TopicP
 
     @Override
     public boolean getSchemaValidationEnforced() {
-        return topicPolicies.getSchemaValidationEnforced().get();
+        return schemaValidationEnforced;
     }
 
     public void markBatchMessagePublished() {
